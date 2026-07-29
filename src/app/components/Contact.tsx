@@ -48,7 +48,7 @@ export default function Contact() {
     <section id="contact"><div className="container">
       <span className="section-label">Contact</span>
       <h2 className="section-title">联系我们</h2>
-      <p className="section-sub">欢迎提前预约，到店即洗，无需等待。</p>
+      <p className="section-sub">欢迎提前预约，到店即洗，无需等待。🐾</p>
 
       <div className="info-grid">
         <div className="info-item"><MapPin /><div><div className="label">地址</div><div className="value">上海市静安区毛毛路 88 号宠物天地 1F</div></div></div>
