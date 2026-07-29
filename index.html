@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>毛毛星球 · 宠物洗护馆</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-700: #3D6B53;
+    --green-500: #5A9A78;
+    --green-100: #E8F3EC;
+    --coral-500: #E07050;
+    --coral-100: #FDE8E2;
+    --cream: #FDFAF5;
+    --gray-900: #2C3A33;
+    --gray-600: #5C6B64;
+    --gray-400: #9BA8A1;
+    --gray-200: #E2E7E4;
+    --white: #FFFFFF;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, sans-serif;
+    color: var(--gray-900);
+    background: var(--white);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  nav {
+    position: sticky; top: 0; z-index: 1000;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 40px;
+  }
+  nav .inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  nav .logo {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 20px; font-weight: 700; color: var(--green-700);
+    text-decoration: none;
+  }
+  nav .logo svg { width: 28px; height: 28px; stroke: var(--coral-500); }
+  nav .links { display: flex; gap: 28px; list-style: none; }
+  nav .links a {
+    text-decoration: none; color: var(--gray-600); font-size: 15px; font-weight: 500;
+    transition: color 0.2s;
+  }
+  nav .links a:hover { color: var(--green-700); }
+  nav .btn-nav {
+    background: var(--coral-500); color: #fff; border: none;
+    padding: 8px 20px; border-radius: 6px; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+  }
+  nav .btn-nav:hover { background: #C95D3E; }
+
+  .hero {
+    position: relative;
+    height: 560px;
+    display: flex; align-items: center;
+    overflow: hidden;
+  }
+  .hero img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center 35%;
+  }
+  .hero .overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to right, rgba(44,58,51,0.55) 0%, rgba(44,58,51,0.15) 100%);
+  }
+  .hero .content {
+    position: relative; z-index: 2;
+    max-width: 1200px; margin: 0 auto; padding: 0 40px; width: 100%;
+  }
+  .hero h1 {
+    font-size: 52px; font-weight: 800; color: #fff;
+    line-height: 1.15; letter-spacing: 0;
+    max-width: 520px;
+  }
+  .hero p {
+    margin-top: 16px; font-size: 18px; color: rgba(255,255,255,0.88);
+    max-width: 440px; line-height: 1.55;
+  }
+  .hero .btn-hero {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 28px;
+    background: var(--coral-500); color: #fff; border: none;
+    padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: background 0.2s; text-decoration: none;
+  }
+  .hero .btn-hero:hover { background: #C95D3E; }
+
+  section { padding: 80px 40px; }
+  section .container { max-width: 1200px; margin: 0 auto; }
+  .section-label {
+    display: inline-block;
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--coral-500);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-size: 36px; font-weight: 800; color: var(--gray-900);
+    letter-spacing: 0;
+  }
+  .section-sub {
+    margin-top: 10px; font-size: 16px; color: var(--gray-600); max-width: 560px;
+  }
+
+  #services { background: var(--cream); }
+  #services .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px;
+  }
+  #services .card {
+    background: var(--white); border-radius: 8px; padding: 32px 28px;
+    border: 1px solid var(--gray-200);
+    transition: box-shadow 0.25s, transform 0.25s;
+  }
+  #services .card:hover {
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+  }
+  #services .card .icon-wrap {
+    width: 48px; height: 48px; border-radius: 8px;
+    background: var(--green-100); display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+  }
+  #services .card .icon-wrap svg { stroke: var(--green-700); width: 26px; height: 26px; }
+  #services .card h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; color: var(--gray-900); }
+  #services .card p { font-size: 14px; color: var(--gray-600); line-height: 1.55; }
+
+  #pricing .table-wrap {
+    margin-top: 40px;
+    border-radius: 10px; border: 1px solid var(--gray-200); overflow: hidden;
+  }
+  #pricing table { width: 100%; border-collapse: collapse; }
+  #pricing thead { background: var(--green-100); }
+  #pricing th {
+    text-align: left; padding: 14px 24px; font-size: 13px; font-weight: 700;
+    color: var(--green-700); text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  #pricing td {
+    padding: 14px 24px; font-size: 15px; border-top: 1px solid var(--gray-200);
+    color: var(--gray-900);
+  }
+  #pricing td.price { color: var(--coral-500); font-weight: 700; white-space: nowrap; }
+  #pricing td .badge {
+    display: inline-block; background: var(--coral-100); color: var(--coral-500);
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+    margin-left: 6px;
+  }
+  #pricing tbody tr:hover { background: #FAFCF8; }
+
+  #gallery { background: var(--green-100); }
+  #gallery .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px;
+  }
+  #gallery .grid img {
+    width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px;
+    transition: transform 0.3s;
+  }
+  #gallery .grid img:hover { transform: scale(1.04); }
+
+  #about .row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; margin-top: 40px;
+  }
+  #about .row img {
+    width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px;
+  }
+  #about .row .text h3 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+  #about .row .text p { font-size: 15px; color: var(--gray-600); line-height: 1.75; margin-bottom: 12px; }
+  #about .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px;
+  }
+  #about .stats .stat {
+    text-align: center; padding: 16px;
+    border: 1px solid var(--gray-200); border-radius: 8px;
+  }
+  #about .stats .stat .num { font-size: 28px; font-weight: 800; color: var(--coral-500); }
+  #about .stats .stat .label { font-size: 13px; color: var(--gray-600); margin-top: 4px; }
+
+  #testimonials .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 40px;
+  }
+  #testimonials .quote {
+    background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px;
+    padding: 28px;
+  }
+  #testimonials .quote .stars { color: #F0B028; font-size: 14px; margin-bottom: 10px; letter-spacing: 2px; }
+  #testimonials .quote p { font-size: 14px; color: var(--gray-600); line-height: 1.65; }
+  #testimonials .quote .author { margin-top: 14px; font-size: 13px; font-weight: 700; color: var(--gray-900); }
+
+  #map-section { padding-bottom: 0; }
+  #map-section .map-wrap {
+    margin-top: 40px;
+    height: 400px; border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--gray-200);
+  }
+  #map-section .map-wrap .leaflet-container {
+    height: 100%; width: 100%;
+  }
+
+  #contact { background: var(--gray-900); color: #fff; padding-top: 60px; }
+  #contact .section-title { color: #fff; }
+  #contact .section-sub { color: var(--gray-400); }
+  #contact .info-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 40px;
+  }
+  #contact .info-item { display: flex; gap: 14px; align-items: flex-start; }
+  #contact .info-item svg { stroke: var(--coral-500); width: 22px; height: 22px; flex-shrink: 0; margin-top: 2px; }
+  #contact .info-item .label { font-size: 13px; color: var(--gray-400); }
+  #contact .info-item .value { font-size: 15px; font-weight: 600; }
+
+  footer {
+    background: var(--gray-900); border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 24px 40px; text-align: center;
+    font-size: 13px; color: var(--gray-400);
+  }
+
+  @media (max-width: 860px) {
+    section { padding: 56px 20px; }
+    nav { padding: 0 20px; }
+    nav .links { display: none; }
+    .hero { height: 420px; }
+    .hero h1 { font-size: 34px; }
+    .hero p { font-size: 15px; }
+    #services .grid,
+    #testimonials .grid { grid-template-columns: 1fr; }
+    #gallery .grid { grid-template-columns: repeat(2, 1fr); }
+    #about .row { grid-template-columns: 1fr; gap: 28px; }
+    #about .stats { grid-template-columns: repeat(3, 1fr); }
+    #pricing td, #pricing th { padding: 12px 16px; font-size: 13px; }
+    #contact .info-grid { grid-template-columns: 1fr; }
+    #map-section .map-wrap { height: 300px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <a href="#" class="logo">
+      <i data-lucide="scissors"></i> 毛毛星球
+    </a>
+    <ul class="links">
+      <li><a href="#services">服务项目</a></li>
+      <li><a href="#pricing">价格一览</a></li>
+      <li><a href="#gallery">店内实拍</a></li>
+      <li><a href="#about">关于我们</a></li>
+      <li><a href="#map-section">店铺位置</a></li>
+      <li><a href="#contact">联系我们</a></li>
+    </ul>
+    <button class="btn-nav" onclick="document.getElementById('contact').scrollIntoView()">预约洗护</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <img src="images/hero.jpg" alt="宠物洗护">
+  <div class="overlay"></div>
+  <div class="content">
+    <h1>给毛孩子<br>温柔的宠爱</h1>
+    <p>专业宠物洗护，使用进口天然洗剂，一对一贴心服务，让每一只宝贝都享受星级 SPA 体验。</p>
+    <a href="#pricing" class="btn-hero">
+      查看服务 <i data-lucide="arrow-right" style="width:18px;height:18px"></i>
+    </a>
+  </div>
+</section>
+
+<section id="services">
+  <div class="container">
+    <span class="section-label">What We Do</span>
+    <h2 class="section-title">服务项目</h2>
+    <p class="section-sub">从基础清洁到深层护理，每一道工序都倾注对宠物的爱与耐心。</p>
+    <div class="grid">
+      <div class="card">
+        <div class="icon-wrap"><i data-lucide="droplets"></i></div>
+        <h3>精致沐浴</h3>
+        <p>根据毛质选用专属洗护产品，深层清洁同时呵护皮肤屏障，洗后毛发蓬松柔亮。</p>
+      </div>
+      <div class="card">
+        <div class="icon-wrap"><i data-lucide="scissors"></i></div>
+        <h3>专业修剪</h3>
+        <p>持有A级宠物美容师资质，针对不同犬猫品种设计造型，精致与舒适兼得。</p>
+      </div>
+      <div class="card">
+        <div class="icon-wrap"><i data-lucide="sparkles"></i></div>
+        <h3>SPA 护理</h3>
+        <p>碳酸温泉浴 + 精油按摩，缓解宠物压力，改善皮肤状况，让宝贝彻底放松。</p>
+      </div>
+      <div class="card">
+        <div class="icon-wrap"><i data-lucide="paw-print"></i></div>
+        <h3>足部护理</h3>
+        <p>修剪指甲、打磨、肉垫护理与脚底毛清理，保护关节，也让小爪子干干净净。</p>
+      </div>
+      <div class="card">
+        <div class="icon-wrap"><i data-lucide="ear"></i></div>
+        <h3>耳道清洁</h3>
+        <p>温和清除耳道污垢与多余分泌物，预防耳螨与炎症，保持耳道干爽健康。</p>
+      </div>
+      <div class="card">
+        <div class="icon-wrap"><i data-lucide="brush"></i></div>
+        <h3>牙齿护理</h3>
+        <p>无痛超声波洁牙 + 口腔检查，去除牙结石、清新口气，守护口腔健康。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="container">
+    <span class="section-label">Pricing</span>
+    <h2 class="section-title">价格一览</h2>
+    <p class="section-sub">透明定价，无隐形消费。所有项目包含基础体检与洗后护理。</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>项目</th><th>适用</th><th>时长</th><th>价格</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>基础洗护</td><td>小型犬 / 猫</td><td>~ 45 min</td><td class="price">¥128</td></tr>
+          <tr><td>基础洗护</td><td>中型犬</td><td>~ 60 min</td><td class="price">¥168</td></tr>
+          <tr><td>基础洗护</td><td>大型犬</td><td>~ 75 min</td><td class="price">¥228</td></tr>
+          <tr><td>精致美容</td><td>全犬种</td><td>~ 90 min</td><td class="price">¥298 <span class="badge">热销</span></td></tr>
+          <tr><td>SPA 护理套餐</td><td>全犬猫</td><td>~ 60 min</td><td class="price">¥198</td></tr>
+          <tr><td>单项护理</td><td>足部 / 耳道 / 牙齿</td><td>~ 20 min</td><td class="price">¥68 起</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="container">
+    <span class="section-label">Our Space</span>
+    <h2 class="section-title">店内实拍</h2>
+    <p class="section-sub">明亮洁净的洗护空间，分区管理猫狗区域，每一处都让家长放心。</p>
+    <div class="grid">
+      <img src="images/gallery-1.jpg" alt="前台接待区" loading="lazy">
+      <img src="images/gallery-2.jpg" alt="美容操作台" loading="lazy">
+      <img src="images/gallery-3.jpg" alt="独立洗护间" loading="lazy">
+      <img src="images/gallery-4.jpg" alt="SPA 专区" loading="lazy">
+      <img src="images/gallery-5.jpg" alt="等候休息区" loading="lazy">
+      <img src="images/gallery-6.jpg" alt="宠物用品区" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="container">
+    <span class="section-label">About Us</span>
+    <h2 class="section-title">关于我们</h2>
+    <p class="section-sub">始于对宠物的热爱，用心做好每一次洗护。</p>
+    <div class="row">
+      <img src="images/about.jpg" alt="毛毛星球团队" loading="lazy">
+      <div class="text">
+        <h3>让每一只毛孩子都被温柔以待</h3>
+        <p>毛毛星球成立于 2018 年，由一群资深宠物美容师共同创立。我们坚持使用进口天然有机洗护产品，为每一只到店的毛孩子提供一对一专属服务。</p>
+        <p>店内设有独立的猫咪专属区和狗狗活动区，全透明操作间让家长可以全程观看洗护过程，安心放心。</p>
+        <div class="stats">
+          <div class="stat">
+            <div class="num">8+</div>
+            <div class="label">年行业经验</div>
+          </div>
+          <div class="stat">
+            <div class="num">5000+</div>
+            <div class="label">服务毛孩子</div>
+          </div>
+          <div class="stat">
+            <div class="num">6</div>
+            <div class="label">持证美容师</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="map-section">
+  <div class="container">
+    <span class="section-label">Location</span>
+    <h2 class="section-title">店铺位置</h2>
+    <p class="section-sub">上海市静安区毛毛路 88 号宠物天地 1F · 地铁 2 号线静安寺站 3 号口步行 5 分钟</p>
+    <div class="map-wrap">
+      <div id="map"></div>
+    </div>
+  </div>
+</section>
+
+<section id="testimonials">
+  <div class="container">
+    <span class="section-label">Reviews</span>
+    <h2 class="section-title">客人评价</h2>
+    <p class="section-sub">每一位家长的信赖，是我们坚持用心服务最大的动力。</p>
+    <div class="grid">
+      <div class="quote">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p>我家布偶猫特别胆小，但美容师超有耐心，全程安抚，洗完香喷喷的，毛发也顺了好多！</p>
+        <div class="author">—— 团团妈</div>
+      </div>
+      <div class="quote">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p>金毛掉毛季来这里做深层清洁，效果立竿见影。店里环境干净明亮，以后就定点这里了。</p>
+        <div class="author">—— 大黄爹</div>
+      </div>
+      <div class="quote">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p>约了SPA套餐，我家柯基洗完整只狗都开心了。美容师手法专业，还给讲了日常护理知识。</p>
+        <div class="author">—— 短短主人</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="container">
+    <span class="section-label">Contact</span>
+    <h2 class="section-title">联系我们</h2>
+    <p class="section-sub">欢迎提前预约，到店即洗，无需等待。</p>
+    <div class="info-grid">
+      <div class="info-item">
+        <i data-lucide="map-pin"></i>
+        <div>
+          <div class="label">地址</div>
+          <div class="value">上海市静安区毛毛路 88 号宠物天地 1F</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <i data-lucide="phone"></i>
+        <div>
+          <div class="label">电话</div>
+          <div class="value">021-8888-6666</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <i data-lucide="clock"></i>
+        <div>
+          <div class="label">营业时间</div>
+          <div class="value">周二至周日 10:00 - 20:00<br>（周一店休）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  &copy; 2026 毛毛星球宠物洗护馆 · 用心洗护每一只毛孩子
+</footer>
+
+<script>
+  lucide.createIcons();
+
+  var map = L.map('map').setView([31.2264, 121.4478], 16);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+  }).addTo(map);
+
+  var marker = L.marker([31.2264, 121.4478]).addTo(map);
+  marker.bindPopup('<b>毛毛星球宠物洗护馆</b><br>静安区毛毛路 88 号宠物天地 1F').openPopup();
+
+  var mapSection = document.getElementById('map-section');
+  var observer = new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting) {
+      setTimeout(function() { map.invalidateSize(); }, 100);
+      observer.disconnect();
+    }
+  }, { threshold: 0.1 });
+  observer.observe(mapSection);
+</script>
+</body>
+</html>
